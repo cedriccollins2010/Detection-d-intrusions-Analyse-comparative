@@ -1,0 +1,341 @@
+================================================================================
+TEXTE DE PRÉSENTATION - PROJET DE SYNTHÈSE
+Évaluation comparative de modèles d'apprentissage automatique 
+pour la détection d'intrusions réseau
+================================================================================
+
+DURÉE ESTIMÉE : 15-20 minutes
+FORMAT : Présentation orale avec support visuel
+
+================================================================================
+SLIDE 1 : TITRE ET INTRODUCTION
+================================================================================
+
+[Bonjour, je suis [Votre nom] et je vais vous présenter mon projet de synthèse 
+sur l'évaluation comparative de modèles d'apprentissage automatique pour la 
+détection d'intrusions réseau.]
+
+La cybersécurité représente aujourd'hui un défi majeur pour les organisations. 
+Les systèmes de détection d'intrusions traditionnels, basés sur des signatures 
+d'attaques connues, montrent leurs limites face aux nouvelles menaces.
+
+C'est dans ce contexte que j'ai mené une étude comparative entre deux grandes 
+familles d'approches : les modèles tabulaires classiques et les réseaux de 
+neurones graphes, ou GNN.
+
+================================================================================
+SLIDE 2 : PROBLÉMATIQUE ET OBJECTIFS
+================================================================================
+
+[La problématique centrale de mon travail repose sur deux limitations 
+identifiées dans les approches actuelles :]
+
+Premièrement, les modèles tabulaires ne capturent pas les relations 
+structurelles entre les entités du réseau - les hôtes, les sessions, les 
+utilisateurs. Chaque flux est traité indépendamment, sans tenir compte des 
+connexions entre flux similaires.
+
+Deuxièmement, les attaques évoluent constamment. Les modèles doivent être 
+capables de généraliser sur des types d'attaques non observés durant 
+l'entraînement, ce qu'on appelle l'apprentissage zero-shot ou few-shot.
+
+[Mon objectif était donc de :]
+- Évaluer rigoureusement 12 modèles tabulaires classiques sur un dataset de 
+  référence
+- Construire un graphe de similarité entre flux réseau et implémenter 3 
+  architectures GNN
+- Comparer objectivement ces approches selon un protocole expérimental unifié
+
+================================================================================
+SLIDE 3 : QUESTIONS DE RECHERCHE
+================================================================================
+
+[Mon étude cherche à répondre à quatre questions principales :]
+
+Question 1 : Dans quels contextes les modèles classiques atteignent-ils leurs 
+limites malgré des scores globaux élevés ?
+
+Question 2 : Quelles représentations - tabulaires ou graphes - et quels 
+algorithmes sont les mieux adaptés à la détection d'intrusions dans des 
+conditions opérationnelles réalistes ?
+
+Question 3 : Quel est l'impact du déséquilibre des classes sur les 
+performances effectives des modèles ?
+
+Question 4 : Les approches graphes apportent-elles un avantage significatif 
+pour certains types d'attaques ou scénarios de déploiement ?
+
+[Ces questions guident toute notre analyse.]
+
+================================================================================
+SLIDE 4 : DATASET ET MÉTHODOLOGIE
+================================================================================
+
+[J'ai travaillé sur le dataset CSE-CIC-IDS2018, un benchmark de référence dans 
+le domaine de la détection d'intrusions.]
+
+Le dataset contient environ 500 000 flux réseau après nettoyage, avec 79 
+caractéristiques par flux et 10 classes d'attaques différentes.
+
+[Point crucial :] Nous avons supprimé les colonnes d'identifiants comme Flow_ID, 
+IP et ports pour éviter ce qu'on appelle le "target leakage" - sans cela, les 
+modèles apprennent simplement à associer certaines IP à des labels, ce qui 
+fausse complètement l'évaluation.
+
+[Pour l'évaluation, j'ai utilisé deux protocoles complémentaires :]
+- La validation croisée temporelle avec 3 folds, qui respecte la chronologie 
+  des données
+- Un protocole hold-out classique en 70/30 pour comparaison
+
+La validation temporelle est essentielle car elle simule un scénario réaliste 
+où le modèle doit prédire sur de nouveaux flux arrivant après son entraînement.
+
+================================================================================
+SLIDE 5 : MODÈLES ÉVALUÉS
+================================================================================
+
+[J'ai évalué 12 modèles tabulaires différents :]
+
+- Modèles linéaires : Logistic Regression, SGD Classifier, LinearSVC
+- Arbres de décision : Decision Tree
+- Ensembles par bagging : Random Forest, Extra Trees
+- Ensembles par boosting : Gradient Boosting, HistGradient Boosting, XGBoost, 
+  LightGBM
+- Modèles probabilistes : Gaussian Naive Bayes, Bernoulli Naive Bayes
+
+[Et j'ai également implémenté 3 architectures de Graph Neural Networks :]
+- GCN, ou Graph Convolutional Network
+- GAT, Graph Attention Network
+- GraphSAGE, qui est particulièrement adapté à l'apprentissage inductif
+
+[Pour les GNN, j'ai construit un graphe de similarité k-NN sur 100 000 nœuds, 
+avec k égal à 10. Le graphe résultant contient environ 485 000 arêtes et 
+présente une structure en clusters naturelle.]
+
+================================================================================
+SLIDE 6 : RÉSULTATS - MODÈLES TABULAIRES
+================================================================================
+
+[Commençons par les résultats des modèles tabulaires.]
+
+En mode hold-out, XGBoost obtient les meilleures performances avec un F1-weighted 
+de 99,12% et une accuracy de 98,75%. Cependant, le F1-macro n'atteint que 23,9%, 
+ce qui révèle un problème majeur.
+
+[En validation croisée temporelle, les performances chutent significativement :]
+LightGBM obtient le meilleur F1-weighted à 74,57%, mais avec un écart-type très 
+élevé de 28%, indiquant une instabilité importante.
+
+[Le problème principal identifié :] Les modèles tabulaires excellent sur les 
+classes majoritaires - notamment la classe Benign qui représente environ 80% 
+des données - mais échouent complètement sur les classes rares. Certaines 
+attaques DoS et DDoS représentent moins de 0,1% des données et sont pratiquement 
+ignorées par ces modèles.
+
+================================================================================
+SLIDE 7 : RÉSULTATS - MODÈLES GNN
+================================================================================
+
+[Passons maintenant aux résultats des Graph Neural Networks.]
+
+J'ai évalué chaque architecture en deux modes :
+- Mode transductif : le modèle voit tous les nœuds pendant l'entraînement
+- Mode inductif : le modèle doit généraliser sur des nœuds jamais vus
+
+[Les résultats sont remarquables :]
+
+GraphSAGE en mode inductif atteint :
+- F1-weighted : 99,93%
+- F1-macro : 98,97%
+- Accuracy : 99,93%
+
+[Comparé à XGBoost :] C'est une amélioration de +75 points de F1-macro ! 
+GraphSAGE passe de 23,9% à 98,58% en mode transductif, et même 98,97% en mode 
+inductif.
+
+[GCN et GAT obtiennent également de très bons résultats, mais GraphSAGE se 
+distingue clairement comme le meilleur modèle, particulièrement en mode 
+inductif.]
+
+================================================================================
+SLIDE 8 : COMPARAISON TABULAIRE VS GNN
+================================================================================
+
+[Voici la comparaison directe entre les meilleurs modèles de chaque famille.]
+
+XGBoost (meilleur tabulaire) :
+- F1-weighted : 99,12%
+- F1-macro : 23,9%
+- Temps d'entraînement : 12 secondes
+
+GraphSAGE Inductif (meilleur GNN) :
+- F1-weighted : 99,93%
+- F1-macro : 98,97%
+- Temps d'entraînement : 113 secondes
+
+[L'analyse révèle que :]
+
+Les modèles tabulaires sont excellents pour :
+- Un déploiement rapide et simple
+- Les classes bien représentées
+- Les scénarios où le coût computationnel est critique
+
+Les GNN apportent une valeur ajoutée pour :
+- Les classes rares et nouvelles attaques
+- La généralisation sur de nouveaux flux
+- Les scénarios où la précision sur toutes les classes est critique
+
+================================================================================
+SLIDE 9 : INTERPRÉTATION DES RÉSULTATS
+================================================================================
+
+[Pourquoi les GNN réussissent-ils là où les modèles tabulaires échouent ?]
+
+La réponse réside dans le mécanisme de propagation d'information dans le graphe. 
+Les GNN exploitent la structure topologique pour permettre aux classes rares 
+d'emprunter de l'information de leurs voisins similaires dans le graphe.
+
+[Par exemple :] Un flux d'attaque DDoS rare peut bénéficier de l'information 
+propagée depuis des flux DDoS similaires dans le graphe, même s'ils sont peu 
+nombreux dans l'ensemble d'entraînement.
+
+[De plus,] le mode inductif de GraphSAGE permet une généralisation réaliste sur 
+de nouveaux flux réseau jamais vus, ce qui est crucial pour un système de 
+détection d'intrusions opérationnel.
+
+[En revanche,] les modèles tabulaires traitent chaque flux indépendamment. 
+Sans suffisamment d'exemples d'une classe rare, ils ne peuvent pas apprendre à 
+la détecter efficacement.
+
+================================================================================
+SLIDE 10 : RÉPONSE AUX QUESTIONS DE RECHERCHE
+================================================================================
+
+[Revenons maintenant aux questions de recherche posées au début.]
+
+Question 1 : Les modèles classiques atteignent leurs limites sur le déséquilibre 
+extrême et les classes nouvelles. Ils privilégient systématiquement la classe 
+majoritaire.
+
+Question 2 : Les modèles tabulaires comme XGBoost sont excellents pour les 
+attaques bien représentées, tandis que les GNN comme GraphSAGE sont supérieurs 
+pour les classes rares et la généralisation.
+
+Question 3 : Le déséquilibre des classes masque la réalité si on se contente 
+de l'accuracy. Le F1-macro révèle les faiblesses réelles des modèles tabulaires.
+
+Question 4 : Oui, les approches graphes apportent un avantage massif : +75 
+points de F1-macro. GraphSAGE atteint 98,58% contre seulement 23,9% pour 
+XGBoost.
+
+================================================================================
+SLIDE 11 : LIMITATIONS DE L'ÉTUDE
+================================================================================
+
+[Il est important de mentionner les limitations de cette étude :]
+
+Premièrement, le dataset CSE-CIC-IDS2018 présente certaines limitations. Les 
+identifiants réseau ont été supprimés, ce qui est nécessaire pour éviter le 
+target leakage, mais cela limite notre capacité à construire des graphes basés 
+sur la topologie réseau réelle.
+
+Deuxièmement, les contraintes computationnelles ont limité l'échantillon GNN 
+à 100 000 nœuds sur les 500 000 disponibles. Une évaluation sur le dataset 
+complet pourrait révéler des résultats différents.
+
+Troisièmement, l'évaluation s'est faite sur un seul dataset. La transférabilité 
+vers d'autres datasets ou environnements réels reste à démontrer.
+
+[Enfin,] le temps d'entraînement des GNN est significativement plus élevé que 
+celui des modèles tabulaires, ce qui peut être un facteur limitant pour certains 
+déploiements.
+
+================================================================================
+SLIDE 12 : CONTRIBUTIONS ET APPORTS
+================================================================================
+
+[Malgré ces limitations, cette étude apporte plusieurs contributions :]
+
+Premièrement, nous avons établi des références solides en évaluant 12 modèles 
+tabulaires avec un protocole réaliste de validation temporelle, révélant leurs 
+limitations sur les classes rares.
+
+Deuxièmement, nous avons démontré quantitativement l'avantage des GNN pour la 
+détection d'intrusions, avec une amélioration de +75 points de F1-macro sur les 
+classes rares.
+
+Troisièmement, nous avons fourni une comparaison objective entre approches 
+tabulaires et graphes selon un protocole expérimental unifié, permettant de 
+formuler des recommandations opérationnelles claires.
+
+[Enfin,] notre pipeline de prétraitement et d'évaluation est reproductible et 
+peut servir de référence pour de futures études.
+
+================================================================================
+SLIDE 13 : PERSPECTIVES DE RECHERCHE
+================================================================================
+
+[Pour conclure, voici les perspectives de recherche futures :]
+
+À court terme :
+- Étendre vers des graphes temporels avec des snapshots horaires
+- Tester d'autres métriques de distance pour la construction k-NN
+- Intégrer des informations de flux bidirectionnels
+
+À moyen terme :
+- Expérimenter avec des architectures GNN plus récentes comme les Graph 
+  Transformers
+- Évaluer sur d'autres datasets pour mesurer la transférabilité
+- Optimiser le compromis temps/performance avec des accélérations GPU
+
+À long terme :
+- Développer des systèmes hybrides combinant modèles tabulaires et GNN
+- Explorer l'apprentissage fédéré avec GNN pour la cybersécurité
+- Améliorer l'explicabilité des décisions GNN pour les analystes SOC
+
+================================================================================
+SLIDE 14 : CONCLUSION
+================================================================================
+
+[Pour conclure cette présentation :]
+
+Cette étude démontre que les Graph Neural Networks, et particulièrement 
+GraphSAGE, apportent un avantage significatif pour la détection d'intrusions 
+réseau, notamment sur les classes rares et les nouveaux scénarios d'attaques.
+
+[Les résultats montrent que :]
+- Les modèles tabulaires restent solides et faciles à déployer pour les classes 
+  bien représentées
+- Les GNN offrent un gain massif sur les classes rares et la généralisation
+- Le choix entre ces approches doit être guidé par le contexte opérationnel et 
+  les contraintes spécifiques
+
+[Enfin,] cette recherche ouvre la voie vers des systèmes de détection 
+d'intrusions plus robustes et capables de s'adapter aux menaces émergentes.
+
+[Je vous remercie de votre attention et je suis disponible pour répondre à vos 
+questions.]
+
+================================================================================
+NOTES POUR LA PRÉSENTATION
+================================================================================
+
+- Adapter le rythme selon l'audience (technique vs généraliste)
+- Mettre l'accent sur les résultats quantitatifs (chiffres clés)
+- Utiliser les visualisations des annexes pour illustrer les points
+- Préparer des réponses aux questions fréquentes sur :
+  * Le choix du dataset
+  * Les raisons de la supériorité des GNN
+  * Les implications pratiques pour le déploiement
+  * Les limitations et comment les surmonter
+
+- Temps de parole approximatif par slide : 1-2 minutes
+- Laisser du temps pour les questions à la fin (5-10 minutes)
+
+================================================================================
+FIN DU TEXTE DE PRÉSENTATION
+================================================================================
+
+
+
+

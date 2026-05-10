@@ -1,0 +1,76 @@
+================================================================================
+VERSION COURTE - PRÉSENTATION 5 MINUTES
+Évaluation comparative de modèles d'apprentissage automatique 
+pour la détection d'intrusions réseau
+================================================================================
+
+================================================================================
+INTRODUCTION (30 secondes)
+================================================================================
+
+[Bonjour, je vais vous présenter mon projet sur l'évaluation comparative de 
+modèles d'apprentissage automatique pour la détection d'intrusions réseau.]
+
+Les systèmes de détection d'intrusions traditionnels montrent leurs limites 
+face aux nouvelles menaces. J'ai comparé deux approches : les modèles 
+tabulaires classiques et les Graph Neural Networks.
+
+================================================================================
+PROBLÉMATIQUE (1 minute)
+================================================================================
+
+[Deux limitations majeures des modèles tabulaires :]
+
+1. Ils ne capturent pas les relations entre entités du réseau
+2. Ils échouent sur les classes rares et nouvelles attaques
+
+[Mon objectif :] Comparer objectivement 12 modèles tabulaires et 3 
+architectures GNN sur le dataset CSE-CIC-IDS2018.
+
+================================================================================
+MÉTHODOLOGIE (1 minute)
+================================================================================
+
+- Dataset : 500 000 flux réseau, 79 caractéristiques, 10 classes d'attaques
+- 12 modèles tabulaires : XGBoost, LightGBM, Random Forest, etc.
+- 3 architectures GNN : GCN, GAT, GraphSAGE
+- Graphe k-NN : 100 000 nœuds, 485 000 arêtes
+- Validation temporelle : 3 folds respectant la chronologie
+
+================================================================================
+RÉSULTATS CLÉS (2 minutes)
+================================================================================
+
+[Modèles tabulaires :]
+- XGBoost : F1-weighted 99,12% mais F1-macro seulement 23,9%
+- Excellent sur classes majoritaires, échec sur classes rares
+
+[Graph Neural Networks :]
+- GraphSAGE inductif : F1-weighted 99,93%, F1-macro 98,97%
+- Amélioration de +75 points de F1-macro par rapport à XGBoost
+
+[Pourquoi cette différence ?]
+Les GNN exploitent la structure du graphe pour permettre aux classes rares 
+d'emprunter de l'information de leurs voisins similaires.
+
+================================================================================
+CONCLUSION (30 secondes)
+================================================================================
+
+[Les résultats montrent que :]
+- Modèles tabulaires : excellents pour déploiement rapide et classes bien 
+  représentées
+- GNN : avantage massif sur classes rares et généralisation
+
+[Recommandation :] Système hybride combinant les deux approches selon le 
+contexte opérationnel.
+
+[Merci pour votre attention !]
+
+================================================================================
+FIN DE LA VERSION COURTE
+================================================================================
+
+
+
+
