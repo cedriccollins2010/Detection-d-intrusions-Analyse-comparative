@@ -1,4 +1,4 @@
-# 🔍 ML vs GNN pour la Détection d'Intrusions Réseau
+#  ML vs GNN pour la Détection d'Intrusions Réseau
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0.1-EE4C2C?style=flat&logo=pytorch&logoColor=white)
@@ -11,7 +11,7 @@
 
 ---
 
-## 🏆 Résultats clés
+##  Résultats clés
 
 | Modèle | Accuracy | F1-macro | Balanced Accuracy | MCC |
 |--------|----------|----------|-------------------|-----|
@@ -20,12 +20,12 @@
 | **GraphSAGE (transductif)** | **99.89%** | **98.58%** | **~98%** | **~0.99** |
 | **GraphSAGE (inductif)** | **99.93%** | **98.97%** | **~99%** | **~0.99** |
 
-> 🚀 **GraphSAGE surpasse XGBoost de +75 points de F1-macro** en exploitant la structure du graphe k-NN entre flux réseau.  
-> 🎯 GraphSAGE détecte les classes ultra-minoritaires (ex: LOIC-UDP avec **seulement 3 exemples**) à **100% de F1**, là où XGBoost échoue complètement (0%).
+> -  **GraphSAGE surpasse XGBoost de +75 points de F1-macro** en exploitant la structure du graphe k-NN entre flux réseau.  
+> -  GraphSAGE détecte les classes ultra-minoritaires (ex: LOIC-UDP avec **seulement 3 exemples**) à **100% de F1**, là où XGBoost échoue complètement (0%).
 
 ---
 
-## 📋 Description du projet
+##  Description du projet
 
 ### Problématique
 
@@ -46,7 +46,7 @@ Les systèmes de détection d'intrusions (IDS) traditionnels basés sur le ML ta
 
 ---
 
-## 📁 Structure du dépôt
+##  Structure du dépôt
 
 ```
 ml-gnn-intrusion-detection/
@@ -115,7 +115,7 @@ pip install torch-geometric
 pip install faiss-cpu networkx
 ```
 
-> ⚠️ Les notebooks ont été développés sur **Google Colab** (GPU T4 pour les GNN). La construction du graphe k-NN nécessite ~9 minutes et ~1.7 Go de RAM.
+>  Les notebooks ont été développés sur **Google Colab** (GPU T4 pour les GNN). La construction du graphe k-NN nécessite ~9 minutes et ~1.7 Go de RAM.
 
 ### Lancer les notebooks
 
@@ -139,15 +139,15 @@ compile.bat
 
 ---
 
-## 📊 Analyse des performances
+##  Analyse des performances
 
 ### Pourquoi les modèles tabulaires échouent sur les classes rares ?
 
 Avec un dataset déséquilibré (82% Benign), l'accuracy est trompeuse. Le F1-macro non pondéré révèle la vérité :
 
 ```
-XGBoost  — Accuracy: 91.5% ✅  |  F1-macro: 23.9% ❌  |  Balanced Accuracy: 33% ❌
-GraphSAGE — Accuracy: 99.9% ✅  |  F1-macro: 98.6% ✅  |  Balanced Accuracy: ~98% ✅
+XGBoost  — Accuracy: 91.5%   |  F1-macro: 23.9%  |  Balanced Accuracy: 33% 
+GraphSAGE — Accuracy: 99.9%   |  F1-macro: 98.6%   |  Balanced Accuracy: ~98% 
 ```
 
 ### Pourquoi les GNN réussissent ?
@@ -156,15 +156,15 @@ Le graphe k-NN crée des **clusters comportementaux** : les flux DDoS se regroup
 
 ---
 
-## 📄 Documents
+##  Documents
 
-- 📑 [Rapport complet (PDF)](rapport/Projet_de_synthese_final.pdf)
-- 📊 [Présentation de soutenance (PDF)](presentation/presentation_soutenance.pdf)
-- 📝 [Documentation technique du graphe](docs/Features_Noeuds_Aretes.md)
+-  [Rapport complet (PDF)](rapport/Projet_de_synthese_final.pdf)
+-  [Présentation de soutenance (PDF)](presentation/presentation_soutenance.pdf)
+-  [Documentation technique du graphe](docs/Features_Noeuds_Aretes.md)
 
 ---
 
-## 👤 Auteur
+##  Auteur
 
 **Cedric Tanekeu**  
 Université — Département d'Informatique  
@@ -172,7 +172,7 @@ Projet de Synthèse, Automne 2025
 
 ---
 
-## 📚 Références principales
+##  Références principales
 
 - Hamilton et al. (2017). *Inductive Representation Learning on Large Graphs* (GraphSAGE)
 - Kipf & Welling (2017). *Semi-Supervised Classification with Graph Convolutional Networks* (GCN)
