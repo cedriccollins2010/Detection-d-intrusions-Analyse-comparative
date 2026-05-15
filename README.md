@@ -1,17 +1,34 @@
-#  ML vs GNN pour la Détection d'Intrusions Réseau
+<div align="center">
+  <img src="figures/banner.png" alt="Project Banner" width="100%">
+  <br><br>
+  <h1>ML vs GNN pour la Détection d'Intrusions Réseau</h1>
+  <p>
+    <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/PyTorch-2.0.1-EE4C2C?style=flat&logo=pytorch&logoColor=white" alt="PyTorch" />
+    <img src="https://img.shields.io/badge/scikit--learn-1.3.0-F7931E?style=flat&logo=scikit-learn&logoColor=white" alt="scikit-learn" />
+    <img src="https://img.shields.io/badge/LaTeX-Rapport-008080?style=flat&logo=latex&logoColor=white" alt="LaTeX" />
+    <img src="https://img.shields.io/badge/Dataset-CSE--CIC--IDS2018-blue?style=flat" alt="Dataset" />
+  </p>
+</div>
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0.1-EE4C2C?style=flat&logo=pytorch&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3.0-F7931E?style=flat&logo=scikit-learn&logoColor=white)
-![LaTeX](https://img.shields.io/badge/LaTeX-Rapport-008080?style=flat&logo=latex&logoColor=white)
-![Dataset](https://img.shields.io/badge/Dataset-CSE--CIC--IDS2018-blue?style=flat)
-
+> [!NOTE]
 > **Projet de Synthèse — Automne 2025**  
 > Évaluation comparative de 12 modèles ML tabulaires et 3 architectures Graph Neural Networks (GNN) pour la détection d'intrusions réseau sur le dataset CSE-CIC-IDS2018.
 
 ---
 
-##  Résultats clés
+## Table des matières
+- [Résultats clés](#résultats-clés)
+- [Description du projet](#description-du-projet)
+- [Structure du dépôt](#structure-du-dépôt)
+- [Méthodologie](#méthodologie)
+- [Reproduction](#reproduction)
+- [Analyse des performances](#analyse-des-performances)
+- [Documents](#documents)
+
+---
+
+## Résultats clés
 
 | Modèle | Accuracy | F1-macro | Balanced Accuracy | MCC |
 |--------|----------|----------|-------------------|-----|
@@ -20,12 +37,14 @@
 | **GraphSAGE (transductif)** | **99.89%** | **98.58%** | **~98%** | **~0.99** |
 | **GraphSAGE (inductif)** | **99.93%** | **98.97%** | **~99%** | **~0.99** |
 
-> -  **GraphSAGE surpasse XGBoost de +75 points de F1-macro** en exploitant la structure du graphe k-NN entre flux réseau.  
-> -  GraphSAGE détecte les classes ultra-minoritaires (ex: LOIC-UDP avec **seulement 3 exemples**) à **100% de F1**, là où XGBoost échoue complètement (0%).
+> [!TIP]
+> **Performance Supérieure des GNN**
+> - **GraphSAGE surpasse XGBoost de +75 points de F1-macro** en exploitant la structure du graphe k-NN entre flux réseau.  
+> - GraphSAGE détecte les classes ultra-minoritaires (ex: LOIC-UDP avec **seulement 3 exemples**) à **100% de F1**, là où XGBoost échoue complètement (0%).
 
 ---
 
-##  Description du projet
+## Description du projet
 
 ### Problématique
 
@@ -42,13 +61,13 @@ Les systèmes de détection d'intrusions (IDS) traditionnels basés sur le ML ta
 ### Dataset
 
 **CSE-CIC-IDS2018** — Canadian Institute for Cybersecurity  
-500 000 flux réseau · 79 caractéristiques · 10 classes d'attaques (DDoS, DoS, Brute Force, Botnet, Infiltration)
+`500 000 flux réseau` · `79 caractéristiques` · `10 classes d'attaques` *(DDoS, DoS, Brute Force, Botnet, Infiltration)*
 
 ---
 
-##  Structure du dépôt
+## Structure du dépôt
 
-```
+```text
 ml-gnn-intrusion-detection/
 ├── rapport/
 │   ├── Projet_de_synthese_final.tex   # Source LaTeX du rapport (1470 lignes)
@@ -65,17 +84,15 @@ ml-gnn-intrusion-detection/
 │   └── 02_GNN_CICIDS2018_Complete_Execution.ipynb # Construction graphe + GNN
 │
 ├── figures/
-│   ├── Screenshot1.png    # Comparaison F1-Score & Accuracy (CV vs Hold-out)
-│   ├── Screenshot2.png    # Temps d'entraînement & métriques multi-dimensionnelles
-│   ├── Screenshot3.png    # Résultats GNN comparatifs
-│   └── Annexe_[3-8].png   # Matrices de confusion et analyses supplémentaires
+│   ├── banner.png         # Bannière du projet
+│   ├── Screenshot1.png    # Comparaison F1-Score & Accuracy
+│   └── ...                # Matrices de confusion et graphiques
 │
 ├── docs/
 │   └── Features_Noeuds_Aretes.md  # Documentation technique de la construction du graphe
 │
 ├── compile.bat            # Script de compilation LaTeX (Windows CMD)
-├── compile.ps1            # Script de compilation LaTeX (PowerShell)
-└── .gitignore
+└── compile.ps1            # Script de compilation LaTeX (PowerShell)
 ```
 
 ---
@@ -84,12 +101,12 @@ ml-gnn-intrusion-detection/
 
 ### Construction du graphe k-NN
 
-```
-100 000 flux réseau (sous-échantillonnage stratifié de 3M)
-    └─ 79 features standardisées (mean=0, std=1)
-        └─ k-NN avec k=10, distance euclidienne
-            └─ 484 602 arêtes (degré moyen: 9.69)
-                └─ Graphe non orienté → PyTorch Geometric Data
+```mermaid
+graph TD
+    A[100 000 flux réseau <br>sous-échantillonnage stratifié de 3M] --> B[79 features standardisées <br>mean=0, std=1]
+    B --> C[k-NN avec k=10 <br>distance euclidienne]
+    C --> D[484 602 arêtes <br>degré moyen: 9.69]
+    D --> E[Graphe non orienté <br>PyTorch Geometric Data]
 ```
 
 ### Protocoles d'évaluation
@@ -115,7 +132,8 @@ pip install torch-geometric
 pip install faiss-cpu networkx
 ```
 
->  Les notebooks ont été développés sur **Google Colab** (GPU T4 pour les GNN). La construction du graphe k-NN nécessite ~9 minutes et ~1.7 Go de RAM.
+> [!WARNING]
+> Les notebooks ont été développés sur **Google Colab** (GPU T4 pour les GNN). La construction du graphe k-NN nécessite ~9 minutes et ~1.7 Go de RAM.
 
 ### Lancer les notebooks
 
@@ -139,15 +157,15 @@ compile.bat
 
 ---
 
-##  Analyse des performances
+## Analyse des performances
 
 ### Pourquoi les modèles tabulaires échouent sur les classes rares ?
 
 Avec un dataset déséquilibré (82% Benign), l'accuracy est trompeuse. Le F1-macro non pondéré révèle la vérité :
 
-```
-XGBoost  — Accuracy: 91.5%   |  F1-macro: 23.9%  |  Balanced Accuracy: 33% 
-GraphSAGE — Accuracy: 99.9%   |  F1-macro: 98.6%   |  Balanced Accuracy: ~98% 
+```text
+XGBoost   — Accuracy: 91.5% | F1-macro: 23.9% | Balanced Accuracy: 33% 
+GraphSAGE — Accuracy: 99.9% | F1-macro: 98.6% | Balanced Accuracy: ~98% 
 ```
 
 ### Pourquoi les GNN réussissent ?
@@ -156,15 +174,15 @@ Le graphe k-NN crée des **clusters comportementaux** : les flux DDoS se regroup
 
 ---
 
-##  Documents
+## Documents
 
--  [Rapport complet (PDF)](rapport/Projet_de_synthese_final.pdf)
--  [Présentation de soutenance (PDF)](presentation/presentation_soutenance.pdf)
--  [Documentation technique du graphe](docs/Features_Noeuds_Aretes.md)
+- [Rapport complet (PDF)](rapport/Projet_de_synthese_final.pdf)
+- [Présentation de soutenance (PDF)](presentation/presentation_soutenance.pdf)
+- [Documentation technique du graphe](docs/Features_Noeuds_Aretes.md)
 
 ---
 
-##  Auteur
+## Auteur
 
 **Cedric Tanekeu**  
 Université — Département d'Informatique  
@@ -172,7 +190,7 @@ Projet de Synthèse, Automne 2025
 
 ---
 
-##  Références principales
+## Références principales
 
 - Hamilton et al. (2017). *Inductive Representation Learning on Large Graphs* (GraphSAGE)
 - Kipf & Welling (2017). *Semi-Supervised Classification with Graph Convolutional Networks* (GCN)
