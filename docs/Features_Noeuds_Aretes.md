@@ -1,4 +1,4 @@
-# Features de Nœuds et Arêtes dans les Notebooks GNN
+﻿# Features de Nœuds et Arêtes dans les Notebooks GNN
 ## Analyse de la Construction du Graphe (VERSION CORRIGÉE)
 
 ---
@@ -575,7 +575,7 @@ Avec graphe IP-IP:
 
 ### Question 3: "Pourquoi ~477K arêtes et pas 500K ou 1M ?"
 
-**✅ RÉPONSE TECHNIQUE:**
+** RÉPONSE TECHNIQUE:**
 
 > **"Calcul théorique :**
 > 
@@ -620,7 +620,7 @@ Avec graphe IP-IP:
 > - ~5% sont asymétriques (A dans top-10 de B MAIS B pas dans top-10 de A)
 > 
 > Calcul:
-> Arêtes réelles ≈ 500,000 × 0.95 = 475,000 ≈ 477,358 ✅
+> Arêtes réelles ≈ 500,000 × 0.95 = 475,000 ≈ 477,358 
 > ```
 > 
 > **3. Auto-boucles exclues :**
@@ -663,13 +663,13 @@ Avec graphe IP-IP:
 | **Nombre arêtes** | Variable (topologie réseau réelle) | ~477,358 (95% de réciprocité) |
 | **Orientation** | Orienté (source → destination) | Non orienté (bidirectionnel) |
 | **Sémantique** | "A communique avec B" | "A est statistiquement similaire à B" |
-| **Causalité** | ✅ Préservée (chronologie, direction) | ❌ Absente (similarité ≠ causalité) |
+| **Causalité** |  Préservée (chronologie, direction) |  Absente (similarité ≠ causalité) |
 | **Clustering** | Topologique (hubs, subnets, zones) | Comportemental (classes similaires regroupées) |
 | **Données requises** | PCAP bruts (captures réseau complètes) | Features pré-calculées (CICIDS2018) |
 | **Prétraitement** | Parsing PCAP, extraction IPs, agrégation flows | Standardisation features (mean=0, std=1) |
-| **Comparabilité ML** | ⚠️ Granularité différente (IP-level vs flow-level) | ✅ Même granularité (flow-level) |
+| **Comparabilité ML** |  Granularité différente (IP-level vs flow-level) |  Même granularité (flow-level) |
 | **Utilité GNN** | Propagation attaques, détection botnet, C&C | Classification flows rares, exploitation similarité |
-| **Complexité** | ⚠️ Élevée (parsing, NAT, dynamique IPs) | ✅ Modérée (k-NN standard, scikit-learn) |
+| **Complexité** |  Élevée (parsing, NAT, dynamique IPs) |  Modérée (k-NN standard, scikit-learn) |
 | **Avantage principal** | Topologie réseau réelle | Comparaison équitable avec ML, clustering naturel |
 | **Inconvénient principal** | Incomparable avec ML tabulaire | Pas de causalité réseau |
 
@@ -720,6 +720,7 @@ Ma construction de graphe **Flow-Flow avec k-NN** est :
 **Alternative IP-IP** aurait été intéressante pour d'autres objectifs (détection botnet, propagation), mais **incompatible** avec mon protocole expérimental (comparaison GNN vs ML tabulaire).
 
 ---
+
 
 
 

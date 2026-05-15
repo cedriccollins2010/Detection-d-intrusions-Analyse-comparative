@@ -80,7 +80,7 @@ ml-gnn-intrusion-detection/
 
 ---
 
-## 🔬 Méthodologie
+## Méthodologie
 
 ### Construction du graphe k-NN
 
@@ -103,7 +103,7 @@ ml-gnn-intrusion-detection/
 
 ---
 
-## 💻 Reproduction
+## Reproduction
 
 ### Prérequis
 
