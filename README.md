@@ -75,10 +75,6 @@ Raw Dataset (500k flux)
 Ready for ML & GNN
 ```
  
-**Rationale**: 100k nœuds = optimum calcul/taille pour k-NN (9 min, 1.7 GB RAM sur Colab T4)
- 
----
- 
 ## Approches Testées
  
 ### A. Modèles ML Tabulaires (Notebook 1)
