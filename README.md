@@ -17,19 +17,6 @@
 
 ---
  
-## À retenir
- 
-| Aspect | Modèles Tabulaires | Graph Neural Networks |
-|--------|-------------------|----------------------|
-| **Baseline** | XGBoost F1: 23.9%, Acc: 91.5% | GraphSAGE F1: 98.6%, Acc: 99.9% |
-| **Méthodologie** | Temporal CV ✓ | Temporal CV ? (à vérifier) |
-| **Limitations** | Échoue sur classes rares | **Possible overfitting sur structure graphe** |
-| **Utilité réelle** | Déploiable, compréhensible | Hautement dépendant de l'arête train/test |
- 
-**Status**: Résultats GNN à valider avant publication. Écart XGBoost/GNN (+75 F1) suggère **data leakage** potentiel.
- 
----
- 
 ## Table des matières
  
 1. [Contexte & Motivation](#contexte--motivation)
