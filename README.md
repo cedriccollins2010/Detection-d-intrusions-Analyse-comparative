@@ -16,183 +16,398 @@
 > Évaluation comparative de 12 modèles ML tabulaires et 3 architectures Graph Neural Networks (GNN) pour la détection d'intrusions réseau sur le dataset CSE-CIC-IDS2018.
 
 ---
-
+ 
+## À retenir
+ 
+| Aspect | Modèles Tabulaires | Graph Neural Networks |
+|--------|-------------------|----------------------|
+| **Baseline** | XGBoost F1: 23.9%, Acc: 91.5% | GraphSAGE F1: 98.6%, Acc: 99.9% |
+| **Méthodologie** | Temporal CV ✓ | Temporal CV ? (à vérifier) |
+| **Limitations** | Échoue sur classes rares | **Possible overfitting sur structure graphe** |
+| **Utilité réelle** | Déploiable, compréhensible | Hautement dépendant de l'arête train/test |
+ 
+**Status**: Résultats GNN à valider avant publication. Écart XGBoost/GNN (+75 F1) suggère **data leakage** potentiel.
+ 
+---
+ 
 ## Table des matières
-- [Résultats clés](#résultats-clés)
-- [Description du projet](#description-du-projet)
-- [Structure du dépôt](#structure-du-dépôt)
-- [Méthodologie](#méthodologie)
-- [Reproduction](#reproduction)
-- [Analyse des performances](#analyse-des-performances)
-- [Documents](#documents)
-
+ 
+1. [Contexte & Motivation](#contexte--motivation)
+2. [Dataset & Préparation](#dataset--préparation)
+3. [Approches Testées](#approches-testées)
+4. [Méthodologie Complète](#méthodologie-complète)
+5. [Résultats Observés](#résultats-observés)
+6. [Limitations Connues](#limitations-connues)
+7. [Reproduction](#reproduction)
+8. [Structure du Dépôt](#structure-du-dépôt)
 ---
-
-## Résultats clés
-
-| Modèle | Accuracy | F1-macro | Balanced Accuracy | MCC |
-|--------|----------|----------|-------------------|-----|
-| XGBoost | 91.5% | 23.9% | 33.0% | ~0.25 |
-| Random Forest | ~91% | ~24% | ~33% | ~0.25 |
-| **GraphSAGE (transductif)** | **99.89%** | **98.58%** | **~98%** | **~0.99** |
-| **GraphSAGE (inductif)** | **99.93%** | **98.97%** | **~99%** | **~0.99** |
-
-> [!TIP]
-> **Performance Supérieure des GNN**
-> - **GraphSAGE surpasse XGBoost de +75 points de F1-macro** en exploitant la structure du graphe k-NN entre flux réseau.  
-> - GraphSAGE détecte les classes ultra-minoritaires (ex: LOIC-UDP avec **seulement 3 exemples**) à **100% de F1**, là où XGBoost échoue complètement (0%).
-
+ 
+## Contexte & Motivation
+ 
+### Problème
+ 
+Les **Intrusion Detection Systems (IDS)** opérationnels détectent les intrusions réseau en classifiant les flux. Deux défis majeurs :
+ 
+1. **Déséquilibre extrême** — 82% du trafic est bénin → accuracy seule est inutile
+2. **Classes ultra-minoritaires** — Certains types d'attaques (LOIC-UDP, Infiltration) apparaissent en < 5 exemples par jour
+Les modèles ML classiques (XGBoost, etc.) ne capturent pas les **relations structurelles** entre flux :
+- Flux d'une même attaque DDoS partagent des patterns similaires
+- Graphe de similarité pourrait exploiter ces clusters
+### Hypothèse du Projet
+ 
+Les **Graph Neural Networks** qui construisent un graphe k-NN entre flux peuvent :
+- Exploiter la structure implicite du trafic
+- Améliorer la détection des classes rares via **message passing**
+- Surpasser les modèles tabulaires sur des métriques justes (F1-macro, balanced accuracy)
 ---
-
-## Description du projet
-
-### Problématique
-
-Les systèmes de détection d'intrusions (IDS) traditionnels basés sur le ML tabulaire présentent deux limitations majeures :
-1. **Absence de structure** : chaque flux est traité isolément, sans tenir compte des relations entre entités réseau.
-2. **Classes rares** : les modèles classiques échouent sur les attaques minoritaires malgré des accuracies globales élevées (~91%).
-
-### Approche
-
-- **Modèles tabulaires** (12 algorithmes) : XGBoost, LightGBM, Random Forest, Extra Trees, Gradient Boosting, HistGradientBoosting, Decision Tree, Logistic Regression, SGD, LinearSVC, Gaussian NB, Bernoulli NB.
-- **Graph Neural Networks** (3 architectures) : GCN, GAT, GraphSAGE — entraînés sur un graphe k-NN de **100 000 nœuds et 484 602 arêtes**.
-- **Validation rigoureuse** : Temporal CV (TimeSeriesSplit, 3 folds) respectant la chronologie des données.
-
-### Dataset
-
-**CSE-CIC-IDS2018** — Canadian Institute for Cybersecurity  
-`500 000 flux réseau` · `79 caractéristiques` · `10 classes d'attaques` *(DDoS, DoS, Brute Force, Botnet, Infiltration)*
-
----
-
-## Structure du dépôt
-
-```text
-ml-gnn-intrusion-detection/
-├── rapport/
-│   ├── Projet_de_synthese_final.tex   # Source LaTeX du rapport (1470 lignes)
-│   └── Projet_de_synthese_final.pdf   # Rapport compilé
-│
-├── presentation/
-│   ├── presentation_soutenance.tex    # Source Beamer de la présentation
-│   ├── presentation_soutenance.pdf    # Diapositives de soutenance
-│   ├── Texte_Presentation.txt         # Script de présentation (version longue)
-│   └── Texte_Presentation_Courte.txt  # Script de présentation (5 minutes)
-│
-├── notebooks/
-│   ├── 01_CICIDS2018_Temporal_CV.ipynb          # ML tabulaire + Temporal CV
-│   └── 02_GNN_CICIDS2018_Complete_Execution.ipynb # Construction graphe + GNN
-│
-├── figures/
-│   ├── banner.png         # Bannière du projet
-│   ├── Screenshot1.png    # Comparaison F1-Score & Accuracy
-│   └── ...                # Matrices de confusion et graphiques
-│
-├── docs/
-│   └── Features_Noeuds_Aretes.md  # Documentation technique de la construction du graphe
-│
-├── compile.bat            # Script de compilation LaTeX (Windows CMD)
-└── compile.ps1            # Script de compilation LaTeX (PowerShell)
+ 
+## Dataset & Préparation
+ 
+### Source
+ 
+**CSE-CIC-IDS2018** — Canadian Institute for Cybersecurity ([Kaggle](https://www.kaggle.com/datasets/solarmainframe/ids-intrusion-csv))
+ 
+- **500 000 flux réseau** au total
+- **79 caractéristiques** (durée, nb paquets, bytes, flags TCP/UDP, etc.)
+- **10 classes d'attaques** :
+  - Benign (~82%)
+  - DDoS / DoS variations
+  - Brute Force (SSH, FTP)
+  - Botnet, Infiltration, Web Attack, Heartbleed, Slowhttptest, etc.
+### Preprocessing
+ 
 ```
-
----
-
-## Méthodologie
-
-### Construction du graphe k-NN
-
-```mermaid
-graph TD
-    A[100 000 flux réseau <br>sous-échantillonnage stratifié de 3M] --> B[79 features standardisées <br>mean=0, std=1]
-    B --> C[k-NN avec k=10 <br>distance euclidienne]
-    C --> D[484 602 arêtes <br>degré moyen: 9.69]
-    D --> E[Graphe non orienté <br>PyTorch Geometric Data]
+Raw Dataset (500k flux)
+    ↓
+[1] Sous-échantillonnage stratifié → 100k flux (class distribution préservée)
+    ↓
+[2] Standardisation Z-score (mean=0, std=1)
+    ↓
+[3] Pas d'imputation (0 valeurs manquantes détectées)
+    ↓
+Ready for ML & GNN
 ```
-
-### Protocoles d'évaluation
-
-| Protocole | Description |
-|-----------|-------------|
-| Hold-out 70/30 | Split aléatoire, rapide mais optimiste |
-| **Temporal CV** | TimeSeriesSplit 3-fold, respecte la chronologie — plus réaliste |
-| Transductif (GNN) | Masques sur graphe complet |
-| **Inductif (GNN)** | Nœuds de test isolés pendant l'entraînement — scénario IDS réel |
-
+ 
+**Rationale**: 100k nœuds = optimum calcul/taille pour k-NN (9 min, 1.7 GB RAM sur Colab T4)
+ 
 ---
-
+ 
+## Approches Testées
+ 
+### A. Modèles ML Tabulaires (Notebook 1)
+ 
+12 algorithmes, tous avec **Temporal CV** (TimeSeriesSplit, 3 folds) :
+ 
+| Algorithme | Paramètres | Notes |
+|-----------|-----------|-------|
+| XGBoost | default | Baseline principal |
+| LightGBM | default | Gradient boosting alternatif |
+| Random Forest | n_estimators=100, max_depth=20 | Ensemble référence |
+| Extra Trees | n_estimators=100 | Variante RF |
+| Gradient Boosting | n_estimators=100, max_depth=5 | GB classique |
+| HistGradientBoosting | max_leaf_nodes=31 | Scalable GB |
+| Decision Tree | max_depth=10 | Baseline simple |
+| Logistic Regression | max_iter=1000 | Linéaire |
+| SGD | loss='log_loss', max_iter=1000 | SGD linéaire |
+| LinearSVC | C=1.0 | SVM linéaire |
+| Gaussian NB | default | Naïve Bayes |
+| Bernoulli NB | alpha=1.0 | Naïve Bayes binaire |
+ 
+**Métrique clés** : Accuracy, F1-macro, F1-weighted, Balanced Accuracy, MCC
+ 
+### B. Graph Neural Networks (Notebook 2)
+ 
+3 architectures entraînées sur graphe k-NN :
+ 
+| Architecture | Couches | Features | Notes |
+|---|---|---|---|
+| **GCN** | 2-3 conv | [79 → 64 → 32 → 10] | Kipf & Welling (2017) |
+| **GAT** | 2-3 attention | [79 → 8 heads × 8 → 10] | Veličković et al. (2018) |
+| **GraphSAGE** | 2-3 aggregation | [79 → 64 → 32 → 10] | Hamilton et al. (2017) |
+ 
+**Graphe** : k-NN avec k=10, euclidienne, non orienté
+- **Nœuds** : 100 000
+- **Arêtes** : ~484 602 (degré moyen 9.69)
+- **Construction** : FAISS pour k-NN rapide
+---
+ 
+## Méthodologie Complète
+ 
+### Étape 1 : Baseline Tabulaire (Temporal CV)
+ 
+```python
+# TimeSeriesSplit respecte la chronologie
+splitter = TimeSeriesSplit(n_splits=3)
+ 
+for train_idx, test_idx in splitter.split(X):
+    X_train, X_test = X[train_idx], X[test_idx]
+    y_train, y_test = y[train_idx], y[test_idx]
+    
+    # XGBoost (et tous les autres)
+    model = XGBClassifier()
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    
+    # Metrics
+    scores.append({
+        'accuracy': accuracy_score(y_test, y_pred),
+        'f1_macro': f1_score(y_test, y_pred, average='macro'),
+        'balanced_acc': balanced_accuracy_score(y_test, y_pred),
+        'mcc': matthews_corrcoef(y_test, y_pred),
+    })
+```
+ 
+**Résultat** : XGBoost F1-macro 23.9% (classe rares non détectées)
+ 
+### Étape 2 : Construction Graphe k-NN
+ 
+```python
+# QUESTION CRITIQUE : À quel point du pipeline?
+# Option A : k-NN sur 100k complets (train + test mélangés)
+# Option B : k-NN par fold Temporal CV (train uniquement)
+ 
+# Actuellement implémenté (Notebook 2) : Option A [⚠️ POTENTIEL LEAKAGE]
+# Comment reproduced: Voir docs/Features_Noeuds_Aretes.md
+```
+ 
+### Étape 3 : Entraînement GNN
+ 
+Deux protocoles d'évaluation :
+ 
+#### **Protocole Transductif**
+```
+Graphe complet (train + test) → Masques nodes [train / val / test]
+Pendant entraînement : message passing voit toute la structure
+→ Nœuds test peuvent avoir arêtes vers nœuds train
+→ Plus performant (F1: 98.6%) MAIS OPTIMISTE
+```
+ 
+#### **Protocole Inductif** (plus réaliste pour IDS)
+```
+Entraînement : graphe train uniquement
+Inférence : nœuds test ajoutés, pas d'arêtes internes
+→ Reflète un vrai système IDS (flux nouveau = isolé)
+→ Moins performant que transductif
+```
+ 
+---
+ 
+## Résultats Observés
+ 
+### Performance par Modèle
+ 
+```
+┌─────────────────────────┬──────────┬──────────┬──────────────┬──────────┐
+│ Modèle                  │ Accuracy │ F1-macro │ Balanced Acc │ MCC      │
+├─────────────────────────┼──────────┼──────────┼──────────────┼──────────┤
+│ XGBoost                 │ 91.5%    │ 23.9%    │ 33.0%        │ ~0.25    │
+│ Random Forest           │ ~91%     │ ~24%     │ ~33%         │ ~0.25    │
+│ LightGBM                │ ~91%     │ ~24%     │ ~32%         │ ~0.24    │
+│ ... (autres tabulaires) │ 85-91%   │ 15-24%   │ 25-33%       │ 0.15-0.25│
+│                         │          │          │              │          │
+│ GCN (transductif)       │ ~99%     │ ~97%     │ ~96%         │ ~0.96    │
+│ GAT (transductif)       │ ~99%     │ ~97%     │ ~96%         │ ~0.96    │
+│ GraphSAGE (transductif) │ 99.89%   │ 98.58%   │ ~98%         │ ~0.99    │
+│ GraphSAGE (inductif)    │ 99.93%   │ 98.97%   │ ~99%         │ ~0.99    │
+└─────────────────────────┴──────────┴──────────┴──────────────┴──────────┘
+```
+ 
+### Écart Inquiétant
+ 
+**XGBoost → GraphSAGE : +75 points de F1-macro**
+ 
+Possible explication :
+- ✅ **Légitime** : Structure graphe capture vraiment les clusters d'attaques
+- ⚠️ **Data leakage** : Arêtes k-NN relient train et test → prédictions gonflées
+- ⚠️ **Overfitting** : GNN mémorise plutôt que généralise
+---
+ 
+## Limitations Connues
+ 
+### 🔴 Critique
+ 
+#### 1. **Possible Data Leakage dans Graphe k-NN**
+ 
+Le graphe k-NN est construit sur **l'ensemble complet (train + test)**.  
+Si un nœud test a une arête vers un nœud train, le message passing peut "fuir" l'information.
+ 
+**À vérifier** :
+```python
+# Pour chaque edge (src, dst) dans le graphe final
+# Si src ∈ test_set et dst ∈ train_set → LEAKAGE CONFIRMÉ
+```
+ 
+**Impact** : Les performances GNN (+98% F1) sont possiblement **artificiellement gonflées**.
+ 
+#### 2. **Temporal CV Absent des GNN**
+ 
+Notebook 1 utilise TimeSeriesSplit → respecte la chronologie.  
+Notebook 2 (GNN) n'applique **pas** Temporal CV visible.
+ 
+**À vérifier** :
+- Graphe k-NN est-il refait pour chaque fold?
+- Ou construit une seule fois sur données mélangées?
+#### 3. **Absence d'Ablation Study**
+ 
+On ne sait pas si la performance vient de :
+- La structure du graphe k-NN
+- Ou juste des 79 features? (GNN peut utiliser features sans arêtes)
+**À faire** : Comparer GNN avec graphe aléatoire.
+ 
+### 🟡 Modéré
+ 
+#### 4. **Hyperparamètres ML par Défaut**
+ 
+XGBoost, LightGBM, etc. utilisent paramètres par défaut.  
+GraphSAGE a probablement reçu du tuning.
+ 
+**Biais** : Comparaison pas équitable.
+ 
+#### 5. **Classe LOIC-UDP : 3 exemples**
+ 
+Claim : "GraphSAGE détecte à 100% F1 avec 3 exemples"
+ 
+**Doute** : 
+- 3 exemples = 1-2 par fold Temporal CV
+- Hard d'avoir F1 = 100% sur 1-2 exemples (sauf si leakage)
+- Matrice de confusion sur cette classe?
+#### 6. **Pas de Stabilité / Intervalles de Confiance**
+ 
+Résultats rapportés comme points fixes.  
+Où sont les barres d'erreur sur 3 folds Temporal CV?
+ 
+### 🟢 Mineur
+ 
+#### 7. **Ensemble Train/Val/Test Implicite**
+ 
+GNN utilise masques train/val/test.  
+Comment sont-ils déterminés? Aléatoire? Split temporel?
+ 
+---
+ 
 ## Reproduction
-
+ 
 ### Prérequis
-
+ 
 ```bash
+# Core
 pip install numpy==1.24 pandas==2.0 scikit-learn==1.3.0
+ 
+# ML
 pip install xgboost lightgbm
-pip install torch==2.0.1
-pip install torch-geometric
-pip install faiss-cpu networkx
+ 
+# GNN
+pip install torch==2.0.1 torch-geometric
+ 
+# Utils
+pip install faiss-cpu networkx jupyter
 ```
-
-> [!WARNING]
-> Les notebooks ont été développés sur **Google Colab** (GPU T4 pour les GNN). La construction du graphe k-NN nécessite ~9 minutes et ~1.7 Go de RAM.
-
-### Lancer les notebooks
-
+ 
+**Hardware recommandé** :
+- Notebook 1 (ML tabulaire) : CPU 4-core, 8 GB RAM → 5-10 min
+- Notebook 2 (GNN) : GPU (Colab T4) → 20-30 min | CPU only → 2+ heures
+### Lancer les Notebooks
+ 
 ```bash
-# Notebook 1 : Modèles tabulaires
+# 1. ML Tabulaires + Temporal CV
 jupyter notebook notebooks/01_CICIDS2018_Temporal_CV.ipynb
-
-# Notebook 2 : Graph Neural Networks
+ 
+# 2. Construction Graphe + GNN
 jupyter notebook notebooks/02_GNN_CICIDS2018_Complete_Execution.ipynb
 ```
-
-### Compiler le rapport LaTeX
-
+ 
+### Compiler Rapport
+ 
 ```bash
-# Windows (CMD)
+# Windows CMD
 compile.bat
-
-# Windows (PowerShell)
+ 
+# Windows PowerShell
 ./compile.ps1
+ 
+# Linux/Mac
+pdflatex -interaction=nonstopmode rapport/Projet_de_synthese_final.tex
 ```
-
+ 
 ---
-
-## Analyse des performances
-
-### Pourquoi les modèles tabulaires échouent sur les classes rares ?
-
-Avec un dataset déséquilibré (82% Benign), l'accuracy est trompeuse. Le F1-macro non pondéré révèle la vérité :
-
-```text
-XGBoost   — Accuracy: 91.5% | F1-macro: 23.9% | Balanced Accuracy: 33% 
-GraphSAGE — Accuracy: 99.9% | F1-macro: 98.6% | Balanced Accuracy: ~98% 
+ 
+## Structure du Dépôt
+ 
 ```
-
-### Pourquoi les GNN réussissent ?
-
-Le graphe k-NN crée des **clusters comportementaux** : les flux DDoS se regroupent naturellement entre eux. Via le **message passing**, un flux rare peut "emprunter" l'information de ses voisins similaires, permettant une classification correcte même avec 3 exemples d'entraînement.
-
+ml-gnn-intrusion-detection/
+│
+├── README.md ................................. (ce fichier)
+│
+├── notebooks/
+│   ├── 01_CICIDS2018_Temporal_CV.ipynb
+│   │   └─ ML tabulaires + TimeSeriesSplit CV
+│   │
+│   └── 02_GNN_CICIDS2018_Complete_Execution.ipynb
+│       └─ k-NN graph build + GCN/GAT/GraphSAGE training
+│
+├── rapport/
+│   ├── Projet_de_synthese_final.tex ........ Source LaTeX (1470 lignes)
+│   ├── Projet_de_synthese_final.pdf ........ Rapport compilé
+│   └── includes/ ............................ Figures, tables intégrées
+│
+├── presentation/
+│   ├── presentation_soutenance.tex ......... Beamer source
+│   ├── presentation_soutenance.pdf ......... Slides de soutenance
+│   ├── Texte_Presentation.txt ............. Script long (~15 min)
+│   └── Texte_Presentation_Courte.txt ...... Script court (5 min)
+│
+├── figures/
+│   ├── banner.png .......................... Logo/bannière
+│   ├── Screenshot1.png ..................... F1-Score vs Accuracy
+│   ├── confusion_xgboost.png ............... Matrice confusion XGBoost
+│   ├── confusion_graphsage.png ............. Matrice confusion GraphSAGE
+│   └── ... (autres visualizations)
+│
+├── docs/
+│   ├── Features_Noeuds_Aretes.md .......... Documentation technique
+│   │   └─ Détail construction k-NN graph
+│   │
+│   └── METHODOLOGY.md (À CRÉER)
+│       └─ Clarification Temporal CV, data leakage
+│
+├── compile.bat .............................. Script compiltion Windows CMD
+├── compile.ps1 .............................. Script compiltion PowerShell
+└── .gitignore ............................... Données exclues du repo
+```
+ 
 ---
-
-## Documents
-
-- [Rapport complet (PDF)](rapport/Projet_de_synthese_final.pdf)
-- [Présentation de soutenance (PDF)](presentation/presentation_soutenance.pdf)
-- [Documentation technique du graphe](docs/Features_Noeuds_Aretes.md)
-
+ 
+## Next Steps (Action Items)
+ 
+### Pour valider les résultats
+ 
+- [ ] **Code audit** : Vérifier k-NN construction (train-only ou complet?)
+- [ ] **Data leakage check** : Lister edges entre train/test
+- [ ] **Temporal CV GNN** : Refaire Notebook 2 avec TimeSeriesSplit par fold
+- [ ] **Ablation study** : GNN avec graphe aléatoire vs k-NN
+- [ ] **Stabilité** : Rapporter std/intervals pour chaque métrique
+### Pour présentation
+ 
+- [ ] Réécrire claims GNN (enlever "+75 F1" sans caveat)
+- [ ] Ajouter section "Limitations" à rapport
+- [ ] Préparer discours pour soutenance : "Résultats prometteurs MAIS à confirmer"
 ---
-
+ 
 ## Auteur
-
+ 
 **Cedric Tanekeu**  
-Université — Département d'Informatique  
-Projet de Synthèse, Automne 2025
-
+Université du Québec en Outaouais (UQO)  
+Département d'Informatique  
+Projet de Synthèse — Automne 2025
+ 
 ---
+ 
+## Références
+ 
+- Hamilton, W. L., Ying, R., & Leskovec, S. (2017). *Inductive Representation Learning on Large Graphs*. ICML.
+- Kipf, T., & Welling, M. (2017). *Semi-Supervised Classification with Graph Convolutional Networks*. ICLR.
+- Veličković, P., Cucurull, G., Casanova, A., Romero, A., Liò, P., & Bengio, Y. (2018). *Graph Attention Networks*. ICLR.
+- Sharafaldin, I., Lippmann, R. P., & Ghorbani, A. A. (2018). Toward an Operational Machine Learning System for Intrusion Detection. [SSRN](https://ssrn.com/abstract=3513622).
+---
+ 
 
-## Références principales
-
-- Hamilton et al. (2017). *Inductive Representation Learning on Large Graphs* (GraphSAGE)
-- Kipf & Welling (2017). *Semi-Supervised Classification with Graph Convolutional Networks* (GCN)
-- Veličković et al. (2018). *Graph Attention Networks* (GAT)
-- Dataset: [CSE-CIC-IDS2018 sur Kaggle](https://www.kaggle.com/datasets/solarmainframe/ids-intrusion-csv)
